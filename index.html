@@ -354,7 +354,10 @@ function StockCalendar() {
         continue;
       }
       if (w.manualCheck) {
-        statusMap[w.id] = { affordable: true, remainingNeeded: 0, remainingAfter: remaining };
+        // 手動チェック済み：達成扱いだが利益も消費する
+        const consumed = Math.min(remaining, w.price);
+        statusMap[w.id] = { affordable: true, remainingNeeded: 0, remainingAfter: remaining - consumed };
+        remaining -= consumed;
         continue;
       }
       if (remaining >= w.price) {
@@ -367,12 +370,13 @@ function StockCalendar() {
     return wishlist.map(w => ({...w, ...statusMap[w.id]}));
   }, [wishlist, monthTotal.afterTax]);
 
-  // 全項目達成後に残る利益（対象外・繰越済みは除く）
   const remainingProfitAfterAll = useMemo(() => {
     let remaining = monthTotal.afterTax > 0 ? monthTotal.afterTax : 0;
     for (const w of wishlist) {
-      if (w.excluded || w.manualCheck || w.carriedOver) continue;
+      if (w.excluded || w.carriedOver) continue;
       if (remaining >= w.price) remaining -= w.price;
+      else if (w.manualCheck) remaining = 0; // 手動チェック済みも消費
+      else break;
     }
     return remaining;
   }, [wishlist, monthTotal.afterTax]);
