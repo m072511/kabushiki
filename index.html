@@ -364,7 +364,9 @@ function StockCalendar() {
         statusMap[w.id] = { affordable: true, remainingNeeded: 0, remainingAfter: remaining - w.price };
         remaining -= w.price;
       } else {
-        statusMap[w.id] = { affordable: false, remainingNeeded: w.price - remaining, remainingAfter: remaining };
+        // 未達成：残りは全部この項目に使い切った扱い→次以降は残り0
+        statusMap[w.id] = { affordable: false, remainingNeeded: w.price - remaining, remainingAfter: 0 };
+        remaining = 0;
       }
     }
     return wishlist.map(w => ({...w, ...statusMap[w.id]}));
